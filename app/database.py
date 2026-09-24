@@ -19,3 +19,12 @@ async def add_subscription(telegram_user_id, query):
             VALUES(?,?)
             """, (telegram_user_id, query))
         await db.commit()
+async def get_subscriptions(telegram_user_id):
+    async with aiosqlite.connect("job_alert.db") as db:
+        cursor = await db.execute("""
+            SELECT query
+            FROM subscriptions
+            WHERE telegram_user_id = ?
+            """, (telegram_user_id,))
+        rows = await cursor.fetchall()
+        return rows

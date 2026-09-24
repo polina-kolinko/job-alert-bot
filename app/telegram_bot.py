@@ -6,7 +6,7 @@ from aiogram.types import Message
 from aiogram.filters import CommandStart
 from aiogram.filters import Command
 from app.trudvsem_api import get_vacancies, format_vacancy
-from app.database import init_db, add_subscription
+from app.database import init_db, add_subscription, get_subscriptions
 
 dp = Dispatcher()
 
@@ -24,6 +24,18 @@ async def subscribe(message: Message):
         text = parts[1]
         await add_subscription(telegram_user_id, text)
         await message.answer("Подписка добавлена")
+
+@dp.message(Command("subscriptions"))
+async def show_subscriptions(message: Message):
+    telegram_user_id = message.from_user.id
+    rows = await get_subscriptions(telegram_user_id)
+    text = "Ваши подписки:\n"
+    if len(rows) == 0:
+        await message.answer("Подписки отсутствуют")
+    else:
+        for elem in rows:
+            text += elem[0] + "\n"
+        await message.answer(text)
 
 
 @dp.message(F.text)
