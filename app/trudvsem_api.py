@@ -9,7 +9,8 @@ def get_vacancies(query):
     try:
         response = requests.get(url, params=params, timeout=15)
         response.raise_for_status()
-    except requests.RequestException:
+    except requests.RequestException as e:
+        print(type(e).__name__, e)
         return None
     
     data = response.json()
