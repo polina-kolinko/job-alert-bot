@@ -14,7 +14,7 @@ async def answer(message: Message):
 @dp.message(F.text)
 async def dialog(message: Message):
     query = message.text.strip()
-    vacancies = get_vacancies(query)
+    vacancies = await get_vacancies(query)
     if vacancies is None:
         await message.answer("не удалось получить вакансии")
     elif not vacancies:

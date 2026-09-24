@@ -1,16 +1,16 @@
-import requests
+import httpx
 
-def get_vacancies(query):
+async def get_vacancies(query):
     url = "http://opendata.trudvsem.ru/api/v1/vacancies"
     params = {
         "text": query,
         "limit": 5
     }
     try:
-        response = requests.get(url, params=params, timeout=15)
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url, params=params, timeout=15)
         response.raise_for_status()
-    except requests.RequestException as e:
-        print(type(e).__name__, e)
+    except httpx.HTTPError:
         return None
     
     data = response.json()
