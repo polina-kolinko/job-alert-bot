@@ -1,4 +1,4 @@
-
+from app.trudvsem_api import get_vacancies, format_vacancy
 def main():
     query = input("Что искать: ")
     vac = get_vacancies(query)
