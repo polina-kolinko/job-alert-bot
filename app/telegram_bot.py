@@ -4,13 +4,28 @@ from aiogram import F
 from app.config import BOT_TOKEN
 from aiogram.types import Message
 from aiogram.filters import CommandStart
+from aiogram.filters import Command
 from app.trudvsem_api import get_vacancies, format_vacancy
+from app.database import init_db, add_subscription
 
 dp = Dispatcher()
 
 @dp.message(CommandStart())
 async def answer(message: Message):
     await message.answer("Привет! Я помогу искать новые вакансии.")
+
+@dp.message(Command("subscribe"))
+async def subscribe(message: Message):
+    telegram_user_id = message.from_user.id
+    parts = message.text.split(maxsplit=1)
+    if len(parts) < 2:
+        await message.answer("Напиши запрос после команды, например /subscribe python")
+    else:
+        text = parts[1]
+        await add_subscription(telegram_user_id, text)
+        await message.answer("Подписка добавлена")
+
+
 @dp.message(F.text)
 async def dialog(message: Message):
     query = message.text.strip()
@@ -26,6 +41,7 @@ async def dialog(message: Message):
 
 
 async def main():
+    await init_db()
     bot = Bot(token=BOT_TOKEN)
     await dp.start_polling(bot)
 
