@@ -6,7 +6,7 @@ from aiogram.types import Message
 from aiogram.filters import CommandStart
 from aiogram.filters import Command
 from app.trudvsem_api import get_vacancies, format_vacancy
-from app.database import init_db, add_subscription, get_subscriptions
+from app.database import init_db, add_subscription, get_subscriptions, delete_subscription
 
 dp = Dispatcher()
 
@@ -37,6 +37,20 @@ async def show_subscriptions(message: Message):
             text += elem[0] + "\n"
         await message.answer(text)
 
+@dp.message(Command("unsubscribe"))
+async def unsubscribe(message: Message):
+    telegram_user_id = message.from_user.id
+    parts = message.text.split(maxsplit=1)
+    if len(parts) < 2:
+        await message.answer("Напиши запрос после команды, например /unsubscribe python")
+    else:
+        text = parts[1]
+        deleted = await delete_subscription(telegram_user_id, text)
+        if deleted > 0:
+            await message.answer("Подписка удалена")
+        else:
+            await message.answer("Такой подписки у вас нет")
+    
 
 @dp.message(F.text)
 async def dialog(message: Message):

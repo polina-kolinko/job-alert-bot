@@ -28,3 +28,12 @@ async def get_subscriptions(telegram_user_id):
             """, (telegram_user_id,))
         rows = await cursor.fetchall()
         return rows
+async def delete_subscription(telegram_user_id, query):
+    async with aiosqlite.connect("job_alert.db") as db:
+        cursor = await db.execute("""
+            DELETE FROM subscriptions
+            WHERE telegram_user_id = ?
+            AND query = ?
+            """, (telegram_user_id, query))
+        await db.commit()
+        return cursor.rowcount
