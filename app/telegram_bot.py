@@ -82,11 +82,16 @@ async def check_subscriptions(bot):
                 await bot.send_message(telegram_user_id, format_vacancy(vacancy))
                 await mark_vacancy_sent(subscription_id, vacancy_id)
 
+async def monitor_subscriptions(bot):
+    while True:
+        
+        await check_subscriptions(bot)
+        await asyncio.sleep(600)
 
 async def main():
     await init_db()
     bot = Bot(token=BOT_TOKEN)
-    await check_subscriptions(bot)
+    asyncio.create_task(monitor_subscriptions(bot))
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
