@@ -6,7 +6,7 @@ from aiogram.types import Message
 from aiogram.filters import CommandStart
 from aiogram.filters import Command
 from app.trudvsem_api import get_vacancies, format_vacancy
-from app.database import init_db, add_subscription, get_subscriptions, delete_subscription
+from app.database import init_db, mark_vacancy_sent, was_vacancy_sent, add_subscription, get_subscriptions, delete_subscription, get_all_subscriptions
 
 dp = Dispatcher()
 
@@ -65,10 +65,28 @@ async def dialog(message: Message):
             elem = item['vacancy']
             await message.answer(format_vacancy(elem))
 
+async def check_subscriptions(bot):
+    subscriptions = await get_all_subscriptions()
+    for subscription in subscriptions:
+        subscription_id, telegram_user_id, query = subscription
+        vacancies = await get_vacancies(query)
+        if vacancies is None:
+            continue
+        for item in vacancies:
+            vacancy = item["vacancy"]
+            vacancy_id = vacancy["id"]
+            sent = await was_vacancy_sent(subscription_id, vacancy_id)
+            if sent:
+                continue
+            else:
+                await bot.send_message(telegram_user_id, format_vacancy(vacancy))
+                await mark_vacancy_sent(subscription_id, vacancy_id)
+
 
 async def main():
     await init_db()
     bot = Bot(token=BOT_TOKEN)
+    await check_subscriptions(bot)
     await dp.start_polling(bot)
 
 if __name__ == "__main__":

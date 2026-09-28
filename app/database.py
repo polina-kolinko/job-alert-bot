@@ -8,6 +8,14 @@ async def init_db():
             query TEXT NOT NULL
             )
             """)
+        await db.execute("""
+            CREATE TABLE IF NOT EXISTS sent_vacancies (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            subscription_id INTEGER NOT NULL,
+            vacancy_id TEXT NOT NULL,
+            UNIQUE(subscription_id, vacancy_id)
+            )
+            """)
         await db.commit()
 async def add_subscription(telegram_user_id, query):
     async with aiosqlite.connect("job_alert.db") as db:
@@ -37,3 +45,30 @@ async def delete_subscription(telegram_user_id, query):
             """, (telegram_user_id, query))
         await db.commit()
         return cursor.rowcount
+async def was_vacancy_sent(subscription_id, vacancy_id):
+    async with aiosqlite.connect("job_alert.db") as db:
+        cursor = await db.execute("""
+            SELECT 1
+            FROM sent_vacancies
+            WHERE subscription_id = ?
+            AND vacancy_id = ?
+            LIMIT 1
+            """, (subscription_id, vacancy_id))
+        row = await cursor.fetchone()
+        return row is not None
+async def mark_vacancy_sent(subscription_id, vacancy_id):
+    async with aiosqlite.connect("job_alert.db") as db:
+        await db.execute("""
+            INSERT OR IGNORE INTO sent_vacancies
+            (subscription_id, vacancy_id)
+            VALUES (?, ?)
+        """, (subscription_id, vacancy_id))
+        await db.commit()
+async def get_all_subscriptions():
+    async with aiosqlite.connect("job_alert.db") as db:
+        cursor = await db.execute("""
+            SELECT id, telegram_user_id, query
+            FROM subscriptions
+        """)
+        rows = await cursor.fetchall()
+        return rows
