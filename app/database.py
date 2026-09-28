@@ -5,7 +5,8 @@ async def init_db():
             CREATE TABLE IF NOT EXISTS subscriptions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             telegram_user_id INTEGER NOT NULL,
-            query TEXT NOT NULL
+            query TEXT NOT NULL,
+            UNIQUE(telegram_user_id, query)
             )
             """)
         await db.execute("""
@@ -19,14 +20,15 @@ async def init_db():
         await db.commit()
 async def add_subscription(telegram_user_id, query):
     async with aiosqlite.connect("job_alert.db") as db:
-        await db.execute("""
-            INSERT INTO subscriptions (
+        cursor = await db.execute("""
+            INSERT OR IGNORE INTO subscriptions (
             telegram_user_id,
             query
             )
             VALUES(?,?)
             """, (telegram_user_id, query))
         await db.commit()
+        return cursor.rowcount
 async def get_subscriptions(telegram_user_id):
     async with aiosqlite.connect("job_alert.db") as db:
         cursor = await db.execute("""

@@ -22,8 +22,11 @@ async def subscribe(message: Message):
         await message.answer("Напиши запрос после команды, например /subscribe python")
     else:
         text = parts[1]
-        await add_subscription(telegram_user_id, text)
-        await message.answer("Подписка добавлена")
+        added = await add_subscription(telegram_user_id, text)
+        if added > 0:
+            await message.answer("Подписка добавлена")
+        else:
+            await message.answer("У вас уже есть такая подписка")
 
 @dp.message(Command("subscriptions"))
 async def show_subscriptions(message: Message):
